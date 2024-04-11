@@ -63,6 +63,7 @@ int main(int argc, char* argv[]) {
     int rv;
     int yes;
     char clientAddrStr[INET6_ADDRSTRLEN];
+    char* ip = "127.0.0.1";
     char* port = argv[1];
     struct addrinfo hints;
     struct addrinfo* servInfo;
@@ -77,9 +78,9 @@ int main(int argc, char* argv[]) {
     memset(&hints, ZERO, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE; /*Will use my address*/
+    // hints.ai_flags = AI_PASSIVE; /*Will use my address*/
 
-    if ((rv = getaddrinfo(NULL, port, &hints, &servInfo)) != ZERO) {
+    if ((rv = getaddrinfo(ip, port, &hints, &servInfo)) != ZERO) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
         return EXIT_FAILURE;
     }
@@ -149,21 +150,28 @@ int main(int argc, char* argv[]) {
             getInAddr((struct sockaddr*)&clientAddr),
             clientAddrStr,
             sizeof(clientAddrStr));
-        fprintf(stdout, "server: %s has connected\n", clientAddrStr);
+
+        fprintf(
+            stdout, 
+            "server: %s has connected\n", 
+            clientAddrStr);
         fflush(stdout);
 
         /*Set up clients to be created and handled*/
-        // struct Client* client = (struct Client*)malloc(sizeof(struct Client));
-        struct Client client;
-        memset(&client, 0, sizeof(client));
-        client.address = 
+        struct Client* client = (struct Client*)calloc(1, sizeof(struct Client));
+        if (client == NULL) {
+            perror("server: Failed to allocate memory for new client.");
+            return EXIT_FAILURE;
+        }
+
+        client->address = 
             *((struct sockaddr_in*)(getInAddr((struct sockaddr*)&clientAddr)));
-        client.socketFD = clientFD;
-        client.uid = uid++;
+        client->socketFD = clientFD;
+        client->uid = uid++;
 
         /*Add client*/
-        addClient(&client);
-        pthread_create(&threadID, NULL, &handleClient, (void*)&client);
+        addClient(client);
+        pthread_create(&threadID, NULL, &handleClient, (void*)client);
         sleep(1);
     }
     
@@ -268,7 +276,6 @@ void* handleClient(void* arg) {
 closeConnection:
     close(client->socketFD);
     removeClient(client->uid);
-    free(client);
     client = NULL;
     client_count--;
     pthread_detach(pthread_self());

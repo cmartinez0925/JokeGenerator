@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
     struct addrinfo* servInfo;
     struct addrinfo* servPtr;
 
-    /*Set up server hints*/
+    /*Set up hints for a server to connect to*/
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_protocol = SOCK_STREAM;
