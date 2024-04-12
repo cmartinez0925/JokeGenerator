@@ -52,8 +52,8 @@ void removeClient(int uid);
 
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        fprintf(stdout, "Usage: %s <port>\n", argv[0]);
+    if (argc != 3) {
+        fprintf(stdout, "Usage: %s <addr> <port>\n", argv[0]);
         return EXIT_FAILURE;
     }
 
@@ -63,8 +63,8 @@ int main(int argc, char* argv[]) {
     int rv;
     int yes;
     char clientAddrStr[INET6_ADDRSTRLEN];
-    char* ip = "127.0.0.1";
-    char* port = argv[1];
+    char* ip = argv[1];
+    char* port = argv[2];
     struct addrinfo hints;
     struct addrinfo* servInfo;
     struct addrinfo* servPtr;
